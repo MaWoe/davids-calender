@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>David's Spritzkalender</title>
+    <style>
+        body {
+            background: black;
+            padding: 0;
+            margin: 0;
+        }
+
+        .dimension {
+            height: 90vh;
+            aspect-ratio: 9 / 20;
+        }
+
+        .container {
+            position: relative;
+            margin: auto;
+        }
+
+        .fixed {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .main {
+            background-image: url("images/David-cut-small.jpg");
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+
+        .overlay {
+        }
+    </style>
+    <script type="application/ecmascript">
+        class David {
+
+            /**
+             * @type {number}
+             */
+            circleRadius = 0.6;
+
+            /**
+             * @type {[]}
+             */
+            sites = [];
+
+            /**
+             * @param {SVGElement} svgElement
+             * @param {string} startDate
+             */
+            constructor(svgElement, startDate) {
+                this.defaultColor = this.getRGB(0, 0, 0, 30);
+                this.svgElement = svgElement;
+
+                if (!this.checkStartDate(startDate)) {
+                    throw 'Invalid start date: ' + startDate;
+                }
+
+                this.startDate = new Date(startDate + ' 00:00:00 GMT+0200');
+                console.log('Start date:', this.startDate)
+
+                // week 1 - breakfast
+                this.addBolusLine(14, 25.5, 3.5);
+                // week 1 - lunch
+                this.addBolusLine(14, 29.5, 3.5);
+                // week 1 - dinner
+                this.addBolusLine(14, 33.5, 3.5);
+
+                // week 2 - breakfast
+                this.addBolusLine(52, 25.5, 3.5);
+                // week 2 - lunch
+                this.addBolusLine(52, 29.5, 3.5);
+                // week 2 - dinner
+                this.addBolusLine(52, 33.5, 3.5);
+            }
+
+            /**
+             * @param {string} date
+             */
+            checkStartDate = (date) => {
+                return /^(\d+)-(\d+)-(\d+)$/.test(date)
+            }
+
+            /**
+             * @param {Date} date
+             */
+            markActiveBolusSiteByDate = (date) => {
+                const diff = Math.floor((date.getTime() - this.startDate.getTime()) / 1000);
+                const daysAndFraction = (diff / (24 * 60 * 60));
+                const days = Math.floor(daysAndFraction);
+                const fraction = daysAndFraction - days;
+                const hours = Math.floor(fraction * 24);
+
+                console.log(diff, days, hours);
+
+                this.markBolusSitesByDayAndHour(days, hours);
+            }
+
+            markBolusSitesByDayAndHour = (day, hour) => {
+                this.resetElements();
+                const daySites = this.getBolusSitesByDay(day);
+                daySites.forEach(element => this.markDaySite(element, 'day'));
+
+                if (hour >= 6 && hour < 11) {
+                    this.markActiveSite(daySites[0]);
+                } else if (hour >= 11 && hour < 15) {
+                    this.markActiveSite(daySites[1]);
+                } else if (hour >= 15 && hour < 23) {
+                    this.markActiveSite(daySites[2]);
+                }
+            }
+
+            resetElements = () => {
+                this.sites.forEach(element => {
+                    if (element.getAttribute('fill') !== this.defaultColor) {
+                        console.log('change fill', element);
+                        element.setAttribute('fill', this.defaultColor);
+                    }
+
+                    if (element.childElementCount) {
+                        console.log('remove animation', element);
+                        element.innerHTML = '';
+                    }
+                });
+            }
+
+            /**
+             * @param {SVGElement} svgSiteNode
+             * @param {string} marker
+             */
+            markDaySite = (svgSiteNode, marker) => {
+                svgSiteNode.setAttribute('fill', this.getRGB(0, 255, 0));
+            }
+
+            markActiveSite = (svgSiteNode) => {
+                const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                animate.setAttribute('attributeName', 'fill');
+                animate.setAttribute('dur', '1s');
+                animate.setAttribute('repeatCount', 'indefinite');
+                animate.setAttribute(
+                    'values',
+                    [
+                        this.getRGB(255, 0, 0, 0),
+                        this.getRGB(255, 0, 0, 100),
+                        this.getRGB(255, 0, 0, 0)
+                    ].join(';')
+                );
+
+                svgSiteNode.appendChild(animate);
+            }
+
+            getRGB = (red, green, blue, alpha = 50) => {
+                return `rgb(${red}, ${green}, ${blue}, ${alpha}%)`;
+            }
+
+            getBolusSitesByDay = (day) => {
+                const increment = 7;
+                day = day % (increment * 2);
+                const week = Math.floor(day / increment);
+
+                const isEvenWeek = (week % 2 === 0);
+                let offset;
+
+                if (isEvenWeek) {
+                    offset = day;
+                } else {
+                    offset = 4 * increment - (day % increment) - 1;
+                }
+
+                return [
+                    this.sites[offset],
+                    this.sites[offset + increment],
+                    this.sites[offset + 2 * increment],
+                ];
+            }
+
+            addBolusLine = (xStart, y, distance) => {
+                for (let count = 1; count < 8; count++) {
+                    this.addInjectSite(xStart + count * distance, y);
+                }
+            }
+
+            addInjectSite = (x, y, name) => {
+                const element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+
+                element.setAttribute('cx', x + '%');
+                element.setAttribute('cy', y + '%');
+                element.setAttribute('r', this.circleRadius + '%');
+                element.setAttribute('stroke', 'transparent');
+                element.setAttribute('stroke-width', '1');
+                element.setAttribute('fill', this.defaultColor);
+
+                this.sites.push(element);
+
+                this.svgElement.appendChild(element);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            /**
+             * @type {SVGElement}
+             */
+            const svgElement = document.getElementById('overlay');
+            const david = new David(svgElement, '2024-07-08');
+            window.d = david;
+
+            function intervalHandler() {
+                david.markActiveBolusSiteByDate(new Date())
+            }
+
+            window.setInterval(intervalHandler, 60 * 1000);
+            intervalHandler();
+        });
+    </script>
+</head>
+<body>
+<div class="container dimension">
+    <div class="main fixed dimension"></div>
+    <svg id="overlay" class="fixed overlay dimension"/>
+</div>
+</body>
+</html>
