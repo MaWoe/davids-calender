@@ -34,6 +34,11 @@
 
         .overlay {
         }
+
+        .text {
+            font: bold 4vh sans-serif;
+            fill: rgb(0, 0, 0, 50%);
+        }
     </style>
     <script type="application/ecmascript">
         class David {
@@ -71,12 +76,17 @@
                 // week 1
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(19 + dayOfWeek * 3.5, 25.9, 4);
+                    this.addBasalLine(16, 53 + dayOfWeek * 3.5, 8);
                 }
 
                 // week 2
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(76 - dayOfWeek * 3.5, 25.9, 4);
+                    this.addBasalLine(70, 53 + dayOfWeek * 3.5, 8);
                 }
+
+                this.createTextElement(5, 31, 'L');
+                this.createTextElement(90, 31, 'R');
             }
 
             /**
@@ -89,7 +99,7 @@
             /**
              * @param {Date} date
              */
-            markActiveBolusSiteByDate = (date) => {
+            markActiveSiteByDate = (date) => {
                 const diff = Math.floor((date.getTime() - this.startDate.getTime()) / 1000);
                 const daysAndFraction = (diff / (24 * 60 * 60));
                 const days = Math.floor(daysAndFraction);
@@ -98,30 +108,37 @@
 
                 console.log(diff, days, hours);
 
-                this.markBolusSitesByDayAndHour(days, hours);
+                this.markSitesByDayAndHour(days, hours);
             }
 
-            markBolusSitesByDayAndHour = (day, hour) => {
-                this.resetElements();
-                const daySites = this.getBolusSitesByDay(day);
-                daySites.forEach(element => this.markDaySite(element, 'day'));
+            markSitesByDayAndHour = (day, hour) => {
+                this.resetSites(this.bolusSites);
+                this.resetSites(this.basalSites);
+
+                const bolusDaySites = this.getBolusSitesByDay(day);
+                const basalDaySites = this.getBasalSitesByDay(day);
+
+                bolusDaySites.forEach(element => this.markDaySite(element, 'day'));
+                basalDaySites.forEach(element => this.markDaySite(element, 'day'));
 
                 const morningStart = 6;
                 const lunchStart = 12;
                 const dinnerStart = 16;
-                const dinnerEnd = 23;
+                const dinnerEnd = 24;
 
                 if (hour >= morningStart && hour < lunchStart) {
-                    this.markActiveSite(daySites[0]);
+                    this.markActiveSite(bolusDaySites[0]);
+                    this.markActiveSite(basalDaySites[0]);
                 } else if (hour >= lunchStart && hour < dinnerStart) {
-                    this.markActiveSite(daySites[1]);
+                    this.markActiveSite(bolusDaySites[1]);
                 } else if (hour >= dinnerStart && hour < dinnerEnd) {
-                    this.markActiveSite(daySites[2]);
+                    this.markActiveSite(bolusDaySites[2]);
+                    this.markActiveSite(basalDaySites[1]);
                 }
             }
 
-            resetElements = () => {
-                this.bolusSites.forEach(element => {
+            resetSites = (sites) => {
+                sites.forEach(element => {
                     if (element.getAttribute('fill') !== this.defaultColor) {
                         console.log('change fill', element);
                         element.setAttribute('fill', this.defaultColor);
@@ -159,6 +176,18 @@
                 svgSiteNode.appendChild(animate);
             }
 
+            createTextElement = (x, y, text) => {
+                const element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+                element.setAttribute('x', x + '%');
+                element.setAttribute('y', y + '%');
+                element.setAttribute('class', 'text');
+
+                element.textContent = text;
+
+                this.svgElement.appendChild(element);
+            }
+
             getRGB = (red, green, blue, alpha = 50) => {
                 return `rgb(${red}, ${green}, ${blue}, ${alpha}%)`;
             }
@@ -173,9 +202,24 @@
                 ];
             }
 
+            getBasalSitesByDay = (day) => {
+                day = day % 14;
+
+                return [
+                    this.basalSites[day * 2],
+                    this.basalSites[day * 2 + 1],
+                ];
+            }
+
             addBolusLine = (x, yStart, distance) => {
                 for (let count = 0; count < 3; count++) {
-                    this.bolusSites.push(this.createInjectSite(x, yStart + count * distance));
+                    this.bolusSites.push(this.createSite(x, yStart + count * distance));
+                }
+            }
+
+            addBasalLine = (xStart, y, distance) => {
+                for (let count = 0; count < 2; count++) {
+                    this.basalSites.push(this.createSite(xStart + count * distance, y));
                 }
             }
 
@@ -184,7 +228,7 @@
              * @param {number} y
              * @return {SVGCircleElement}
              */
-            createInjectSite = (x, y) => {
+            createSite = (x, y) => {
                 const element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
                 element.setAttribute('cx', x + '%');
@@ -209,7 +253,7 @@
             window.d = david;
 
             function intervalHandler() {
-                david.markActiveBolusSiteByDate(new Date())
+                david.markActiveSiteByDate(new Date())
             }
 
             window.setInterval(intervalHandler, 60 * 1000);
@@ -220,7 +264,10 @@
 <body>
 <div class="container dimension">
     <div class="main fixed dimension"></div>
-    <svg id="overlay" class="fixed overlay dimension"/>
+    <svg id="overlay" class="fixed overlay dimension">
+        <style>
+        </style>
+    </svg>
 </div>
 </body>
 </html>
