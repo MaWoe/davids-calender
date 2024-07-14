@@ -46,7 +46,12 @@
             /**
              * @type {[]}
              */
-            sites = [];
+            bolusSites = [];
+
+            /**
+             * @type {[]}
+             */
+            basalSites = [];
 
             /**
              * @param {SVGElement} svgElement
@@ -63,19 +68,15 @@
                 this.startDate = new Date(startDate + ' 00:00:00 GMT+0200');
                 console.log('Start date:', this.startDate)
 
-                // week 1 - breakfast
-                this.addBolusLine(14, 25.5, 3.5);
-                // week 1 - lunch
-                this.addBolusLine(14, 29.5, 3.5);
-                // week 1 - dinner
-                this.addBolusLine(14, 33.5, 3.5);
+                // week 1
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                    this.addBolusLine(19 + dayOfWeek * 3.5, 25.9, 4);
+                }
 
-                // week 2 - breakfast
-                this.addBolusLine(52, 25.5, 3.5);
-                // week 2 - lunch
-                this.addBolusLine(52, 29.5, 3.5);
-                // week 2 - dinner
-                this.addBolusLine(52, 33.5, 3.5);
+                // week 2
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                    this.addBolusLine(76 - dayOfWeek * 3.5, 25.9, 4);
+                }
             }
 
             /**
@@ -120,7 +121,7 @@
             }
 
             resetElements = () => {
-                this.sites.forEach(element => {
+                this.bolusSites.forEach(element => {
                     if (element.getAttribute('fill') !== this.defaultColor) {
                         console.log('change fill', element);
                         element.setAttribute('fill', this.defaultColor);
@@ -163,33 +164,27 @@
             }
 
             getBolusSitesByDay = (day) => {
-                const increment = 7;
-                day = day % (increment * 2);
-                const week = Math.floor(day / increment);
-
-                const isEvenWeek = (week % 2 === 0);
-                let offset;
-
-                if (isEvenWeek) {
-                    offset = day;
-                } else {
-                    offset = 4 * increment - (day % increment) - 1;
-                }
+                day = day % 14;
 
                 return [
-                    this.sites[offset],
-                    this.sites[offset + increment],
-                    this.sites[offset + 2 * increment],
+                    this.bolusSites[day * 3],
+                    this.bolusSites[day * 3 + 1],
+                    this.bolusSites[day * 3 + 2],
                 ];
             }
 
-            addBolusLine = (xStart, y, distance) => {
-                for (let count = 1; count < 8; count++) {
-                    this.addInjectSite(xStart + count * distance, y);
+            addBolusLine = (x, yStart, distance) => {
+                for (let count = 0; count < 3; count++) {
+                    this.bolusSites.push(this.createInjectSite(x, yStart + count * distance));
                 }
             }
 
-            addInjectSite = (x, y, name) => {
+            /**
+             * @param {number} x
+             * @param {number} y
+             * @return {SVGCircleElement}
+             */
+            createInjectSite = (x, y) => {
                 const element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
                 element.setAttribute('cx', x + '%');
@@ -199,9 +194,9 @@
                 element.setAttribute('stroke-width', '1');
                 element.setAttribute('fill', this.defaultColor);
 
-                this.sites.push(element);
-
                 this.svgElement.appendChild(element);
+
+                return element;
             }
         }
 
