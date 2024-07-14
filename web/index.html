@@ -105,11 +105,16 @@
                 const daySites = this.getBolusSitesByDay(day);
                 daySites.forEach(element => this.markDaySite(element, 'day'));
 
-                if (hour >= 6 && hour < 11) {
+                const morningStart = 6;
+                const lunchStart = 12;
+                const dinnerStart = 16;
+                const dinnerEnd = 23;
+
+                if (hour >= morningStart && hour < lunchStart) {
                     this.markActiveSite(daySites[0]);
-                } else if (hour >= 11 && hour < 15) {
+                } else if (hour >= lunchStart && hour < dinnerStart) {
                     this.markActiveSite(daySites[1]);
-                } else if (hour >= 15 && hour < 23) {
+                } else if (hour >= dinnerStart && hour < dinnerEnd) {
                     this.markActiveSite(daySites[2]);
                 }
             }
