@@ -76,13 +76,13 @@
                 // week 1
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(19 + dayOfWeek * 3.5, 25.9, 4);
-                    this.addBasalLine(24, 53 + dayOfWeek * 3.5, -8);
+                    this.addBasalLine(70 , 53 + dayOfWeek * 3.5, 8);
                 }
 
                 // week 2
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(76 - dayOfWeek * 3.5, 25.9, 4);
-                    this.addBasalLine(70 , 53 + dayOfWeek * 3.5, 8);
+                    this.addBasalLine(24, 53 + dayOfWeek * 3.5, -8);
                 }
 
                 this.createTextElement(5, 31, 'L');
