@@ -76,13 +76,13 @@
                 // week 1
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(19 + dayOfWeek * 3.5, 25.9, 4);
-                    this.addBasalLine(16, 53 + dayOfWeek * 3.5, 8);
+                    this.addBasalLine(24, 53 + dayOfWeek * 3.5, -8);
                 }
 
                 // week 2
                 for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     this.addBolusLine(76 - dayOfWeek * 3.5, 25.9, 4);
-                    this.addBasalLine(78, 53 + dayOfWeek * 3.5, -8);
+                    this.addBasalLine(70 , 53 + dayOfWeek * 3.5, 8);
                 }
 
                 this.createTextElement(5, 31, 'L');
@@ -118,8 +118,8 @@
                 const bolusDaySites = this.getBolusSitesByDay(day);
                 const basalDaySites = this.getBasalSitesByDay(day);
 
-                bolusDaySites.forEach(element => this.markDaySite(element, 'day'));
-                basalDaySites.forEach(element => this.markDaySite(element, 'day'));
+                bolusDaySites.forEach(element => this.markDaySite(element));
+                basalDaySites.forEach(element => this.markDaySite(element));
 
                 const morningStart = 6;
                 const lunchStart = 12;
@@ -153,9 +153,8 @@
 
             /**
              * @param {SVGElement} svgSiteNode
-             * @param {string} marker
              */
-            markDaySite = (svgSiteNode, marker) => {
+            markDaySite = (svgSiteNode) => {
                 svgSiteNode.setAttribute('fill', this.getRGB(0, 255, 0));
             }
 
