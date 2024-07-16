@@ -248,14 +248,14 @@
              * @type {SVGElement}
              */
             const svgElement = document.getElementById('overlay');
-            const david = new David(svgElement, '2024-07-08');
+            const david = new David(svgElement, '2024-07-01');
             window.d = david;
 
             function intervalHandler() {
                 david.markActiveSiteByDate(new Date())
             }
 
-            window.setInterval(intervalHandler, 60 * 1000);
+            window.setInterval(intervalHandler, 5 * 1000);
             intervalHandler();
         });
     </script>
